@@ -19,7 +19,8 @@ public enum ErrorCode {
 
     // Member
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER001", "회원을 찾을 수 없습니다."),
-    ;
+    MEMBER_FORBIDDEN(HttpStatus.FORBIDDEN, "MEMBER002", "접근이 금지되었습니다."),
+    MEMBER_LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "MEMBER003", "이메일 또는 비밀번호가 일치하지 않습니다.");
 
     private final HttpStatus status;
     private final String code;
