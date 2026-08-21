@@ -1,0 +1,149 @@
+body {
+    font-family: -apple-system, "Malgun Gothic", sans-serif;
+    background: #f5f5f5;
+    margin: 0;
+}
+
+.container {
+    max-width: 720px;
+    margin: 40px auto;
+    background: #fff;
+    padding: 24px 32px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .1);
+}
+
+h1 {
+    font-size: 22px;
+    margin-bottom: 16px;
+}
+
+.nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+}
+
+.nav h1 {
+    margin-bottom: 0;
+}
+
+.logout-form {
+    display: inline;
+}
+
+.logout-form button {
+    background: none;
+    color: #2d6cdf;
+    padding: 0;
+    text-decoration: underline;
+    font-size: 14px;
+}
+
+.board-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.board-table th,
+.board-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+    font-size: 14px;
+}
+
+.pagination {
+    margin: 16px 0;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    font-size: 14px;
+}
+
+.button,
+.actions a,
+form button[type=submit] {
+    display: inline-block;
+    padding: 8px 16px;
+    background: #2d6cdf;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+    margin: 16px 0;
+}
+
+.meta {
+    color: #888;
+    font-size: 13px;
+}
+
+.description {
+    white-space: pre-wrap;
+    line-height: 1.6;
+    margin: 16px 0;
+}
+
+.field {
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.field input,
+.field textarea {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.error {
+    color: #d33;
+    font-size: 12px;
+}
+
+.alert {
+    padding: 10px 14px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.alert-error {
+    background: #fdecea;
+    color: #d33;
+}
+
+.alert-success {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.delete-form {
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.delete-form input {
+    width: 120px;
+    padding: 6px;
+}
+
+.delete-form button {
+    background: #d33;
+}

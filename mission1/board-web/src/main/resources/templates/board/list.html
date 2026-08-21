@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>게시판</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="container">
+    <div class="nav">
+        <h1>게시판</h1>
+        <span th:if="${currentUser == null}"><a th:href="@{/login}">로그인</a></span>
+        <span th:if="${currentUser != null}">
+            <span th:text="${currentUser.name} + '님'"></span>
+            <form th:action="@{/logout}" method="post" class="logout-form">
+                <button type="submit">로그아웃</button>
+            </form>
+        </span>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+
+    <table class="board-table">
+        <thead>
+        <tr>
+            <th>번호</th>
+            <th>제목</th>
+            <th>작성자</th>
+            <th>작성일</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="board : ${boards.content}">
+            <td th:text="${board.rowNumber}"></td>
+            <td><a th:href="@{/boards/{id}(id=${board.id})}" th:text="${board.title}"></a></td>
+            <td th:text="${board.authorName}"></td>
+            <td th:text="${#temporals.format(board.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+        </tr>
+        <tr th:if="${boards.content.isEmpty()}">
+            <td colspan="4">등록된 게시글이 없습니다.</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="pagination">
+        <a th:unless="${boards.first}" th:href="@{/boards(page=${boards.number - 1})}">이전</a>
+        <span th:text="${(boards.number + 1) + ' / ' + (boards.totalPages == 0 ? 1 : boards.totalPages)}"></span>
+        <a th:unless="${boards.last}" th:href="@{/boards(page=${boards.number + 1})}">다음</a>
+    </div>
+
+    <a th:if="${currentUser != null}" class="button" th:href="@{/boards/new}">새 글쓰기</a>
+</div>
+</body>
+</html>
