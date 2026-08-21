@@ -1,5 +1,7 @@
 package com.boardapp.api.board.controller;
 
+import jakarta.validation.Valid;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -13,10 +15,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.boardapp.api.board.domain.Board;
 import com.boardapp.api.board.dto.BoardListResponse;
+import com.boardapp.api.board.dto.BoardRequest;
 import com.boardapp.api.board.dto.BoardResponse;
 import com.boardapp.api.board.service.BoardService;
 
@@ -25,11 +28,11 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/v1/boards")
 @RequiredArgsConstructor
-public class BoardController {
+public class BoardController implements BoardControllerDocs {
 
     private final BoardService boardService;
 
-    // 게시판 리스트 조회 (페이지네이션)
+    @Override
     @GetMapping("/list")
     public ResponseEntity<Page<BoardListResponse>> getBoardList(
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
@@ -37,31 +40,31 @@ public class BoardController {
         return ResponseEntity.ok(boards);
     }
 
-    // 게시판 항목 조회 
+    @Override
     @GetMapping("/{id}")
     public ResponseEntity<BoardResponse> getBoard(@PathVariable Long id) {
         BoardResponse board = boardService.getBoardById(id);
         return ResponseEntity.ok(board);
     }
 
-    // 게시판 항목 생성
+    @Override
     @PostMapping
-    public ResponseEntity<BoardResponse> createBoard(@RequestBody Board board) {
-        BoardResponse created = boardService.createBoard(board);
+    public ResponseEntity<BoardResponse> createBoard(@Valid @RequestBody BoardRequest request) {
+        BoardResponse created = boardService.createBoard(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    // 게시판 항목 수정
+    @Override
     @PutMapping("/{id}")
-    public ResponseEntity<BoardResponse> updateBoard(@PathVariable Long id, @RequestBody Board board) {
-        BoardResponse updated = boardService.updateBoard(id, board);
+    public ResponseEntity<BoardResponse> updateBoard(@PathVariable Long id, @Valid @RequestBody BoardRequest request) {
+        BoardResponse updated = boardService.updateBoard(id, request);
         return ResponseEntity.ok(updated);
     }
 
-    // 게시판 항목 삭제
+    @Override
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBoard(@PathVariable Long id) {    
-        boardService.deleteBoard(id);
+    public ResponseEntity<Void> deleteBoard(@PathVariable Long id, @RequestParam Long memberId) {
+        boardService.deleteBoard(id, memberId);
         return ResponseEntity.noContent().build();
-    }   
+    }
 }
