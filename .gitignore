@@ -1,0 +1,8 @@
+# Claude Code 로컬 설정 (커밋하지 않음)
+.claude/
+CLAUDE.md
+
+# 로컬 환경 변수 (비밀번호 포함, 커밋하지 않음)
+.env
+
+mission1/db/init/

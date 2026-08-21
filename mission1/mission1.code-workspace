@@ -1,0 +1,9 @@
+{
+	"folders": [
+		{ "name": "board-api", "path": "board-api" },
+		{ "name": "board-web", "path": "board-web" }
+	],
+	"settings": {
+		"java.configuration.updateBuildConfiguration": "automatic"
+	}
+}

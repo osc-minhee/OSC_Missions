@@ -1,0 +1,8 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/boarddb
+    username: board_user
+    password: board_pass
+  jpa:
+    hibernate:
+      ddl-auto: update
