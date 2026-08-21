@@ -1,0 +1,2 @@
+board-api:
+  base-url: ${BOARD_API_BASE_URL}
