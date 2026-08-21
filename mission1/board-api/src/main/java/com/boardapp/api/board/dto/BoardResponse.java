@@ -8,6 +8,7 @@ public record BoardResponse(
         Long id,
         String title,
         String description,
+        Long authorId,
         String authorName,
         LocalDateTime createdAt) {
 
@@ -16,6 +17,7 @@ public record BoardResponse(
                 board.getId(),
                 board.getTitle(),
                 board.getDescription(),
+                board.getMember().getId(),
                 board.getMember().getName(),
                 board.getCreatedAt());
     }
