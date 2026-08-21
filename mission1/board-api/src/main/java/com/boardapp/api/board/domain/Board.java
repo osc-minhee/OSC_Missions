@@ -42,6 +42,15 @@ public class Board {
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
+    protected Board() {
+    }
+
+    public Board(String title, String description, Member member) {
+        this.title = title;
+        this.description = description;
+        this.member = member;
+    }
+
     public void setTitle(String title) {
         this.title = title;
     }
