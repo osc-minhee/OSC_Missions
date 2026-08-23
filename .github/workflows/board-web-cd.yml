@@ -1,4 +1,4 @@
-name: board-api CD
+name: board-web CD
 
 on:
   push:
@@ -6,8 +6,8 @@ on:
       - main
       - feature/auth
     paths:
-      - "mission1/board-api/**"
-      - ".github/workflows/board-api-cd.yml"
+      - "mission1/board-web/**"
+      - ".github/workflows/board-web-cd.yml"
 
 jobs:
   build-and-push:
@@ -16,6 +16,7 @@ jobs:
       image: ${{ steps.vars.outputs.image }}
       container_name: ${{ steps.vars.outputs.container_name }}
       host_port: ${{ steps.vars.outputs.host_port }}
+      api_port: ${{ steps.vars.outputs.api_port }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,7 +29,7 @@ jobs:
           cache: maven
 
       - name: Build jar
-        working-directory: mission1/board-api
+        working-directory: mission1/board-web
         run: mvn -B clean package -DskipTests
 
       - name: Resolve branch-specific settings
@@ -38,23 +39,26 @@ jobs:
           case "${GITHUB_REF_NAME}" in
             main)
               TAG="main-${SHORT_SHA}"
-              CONTAINER="board-api-main"
-              PORT="8080"
+              CONTAINER="board-web-main"
+              PORT="8090"
+              API_PORT="8080"
               ;;
             feature/auth)
               TAG="auth-${SHORT_SHA}"
-              CONTAINER="board-api-auth"
-              PORT="8081"
+              CONTAINER="board-web-auth"
+              PORT="8091"
+              API_PORT="8081"
               ;;
             *)
               echo "Unsupported branch: ${GITHUB_REF_NAME}" >&2
               exit 1
               ;;
           esac
-          IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/board-api:${TAG}"
+          IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/board-web:${TAG}"
           echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
           echo "container_name=${CONTAINER}" >> "$GITHUB_OUTPUT"
           echo "host_port=${PORT}" >> "$GITHUB_OUTPUT"
+          echo "api_port=${API_PORT}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -68,7 +72,7 @@ jobs:
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
-          context: mission1/board-api
+          context: mission1/board-web
           push: true
           tags: ${{ steps.vars.outputs.image }}
 
@@ -82,21 +86,16 @@ jobs:
           IMAGE: ${{ needs.build-and-push.outputs.image }}
           CONTAINER_NAME: ${{ needs.build-and-push.outputs.container_name }}
           HOST_PORT: ${{ needs.build-and-push.outputs.host_port }}
+          BOARD_API_BASE_URL: http://${{ secrets.DEV_SERVER_HOST }}:${{ needs.build-and-push.outputs.api_port }}
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         with:
-          host: ${{ secrets.DEV_SERVER_HOST }}
-          username: ${{ secrets.DEV_SERVER_USER }}
-          key: ${{ secrets.DEV_SERVER_SSH_KEY }}
-          envs: IMAGE,CONTAINER_NAME,HOST_PORT,DOCKERHUB_USERNAME,DOCKERHUB_TOKEN,DB_HOST,DB_PORT,DB_NAME,DB_USERNAME,DB_PASSWORD
+          host: ${{ secrets.FE_DEV_SERVER_HOST }}
+          username: ${{ secrets.FE_DEV_SERVER_USER }}
+          key: ${{ secrets.FE_DEV_SERVER_SSH_KEY }}
+          envs: IMAGE,CONTAINER_NAME,HOST_PORT,BOARD_API_BASE_URL,DOCKERHUB_USERNAME,DOCKERHUB_TOKEN
           script: |
             echo "${DOCKERHUB_TOKEN}" | docker login -u "${DOCKERHUB_USERNAME}" --password-stdin
-            docker network create board-net 2>/dev/null || true
             docker pull "${IMAGE}"
             docker stop "${CONTAINER_NAME}" 2>/dev/null || true
             docker rm "${CONTAINER_NAME}" 2>/dev/null || true
@@ -104,18 +103,13 @@ jobs:
             ENV_FILE=$(mktemp)
             cat > "${ENV_FILE}" <<EOF
             SPRING_PROFILES_ACTIVE=prod
-            DB_HOST=${DB_HOST}
-            DB_PORT=${DB_PORT}
-            DB_NAME=${DB_NAME}
-            DB_USERNAME=${DB_USERNAME}
-            DB_PASSWORD=${DB_PASSWORD}
+            BOARD_API_BASE_URL=${BOARD_API_BASE_URL}
             EOF
 
             docker run -d \
               --name "${CONTAINER_NAME}" \
               --restart unless-stopped \
-              --network board-net \
-              -p "${HOST_PORT}:8080" \
+              -p "${HOST_PORT}:8081" \
               --env-file "${ENV_FILE}" \
               "${IMAGE}"
 
