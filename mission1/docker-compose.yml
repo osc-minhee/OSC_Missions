@@ -17,6 +17,12 @@ services:
     volumes:
       - board-postgres-data:/var/lib/postgresql/data
       - ./db/init:/docker-entrypoint-initdb.d
+    networks:
+      - board-net
 
 volumes:
   board-postgres-data:
+
+networks:
+  board-net:
+    external: true
