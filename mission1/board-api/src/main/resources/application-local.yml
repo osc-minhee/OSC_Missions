@@ -6,3 +6,6 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+
+jwt:
+  secret: local-only-development-secret-key-change-me-1234567890

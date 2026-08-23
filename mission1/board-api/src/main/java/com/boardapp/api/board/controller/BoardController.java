@@ -8,6 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,6 +22,7 @@ import com.boardapp.api.board.dto.BoardListResponse;
 import com.boardapp.api.board.dto.BoardRequest;
 import com.boardapp.api.board.dto.BoardResponse;
 import com.boardapp.api.board.service.BoardService;
+import com.boardapp.api.global.security.CustomUserDetails;
 
 import lombok.RequiredArgsConstructor;
 
@@ -48,22 +50,25 @@ public class BoardController implements BoardControllerDocs {
 
     @Override
     @PostMapping
-    public ResponseEntity<BoardResponse> createBoard(@Valid @RequestBody BoardRequest request) {
-        BoardResponse created = boardService.createBoard(request);
+    public ResponseEntity<BoardResponse> createBoard(@Valid @RequestBody BoardRequest request,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        BoardResponse created = boardService.createBoard(request, currentUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @Override
     @PutMapping("/{id}")
-    public ResponseEntity<BoardResponse> updateBoard(@PathVariable Long id, @Valid @RequestBody BoardRequest request) {
-        BoardResponse updated = boardService.updateBoard(id, request);
+    public ResponseEntity<BoardResponse> updateBoard(@PathVariable Long id, @Valid @RequestBody BoardRequest request,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        BoardResponse updated = boardService.updateBoard(id, request, currentUser);
         return ResponseEntity.ok(updated);
     }
 
     @Override
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBoard(@PathVariable Long id) {
-        boardService.deleteBoard(id);
+    public ResponseEntity<Void> deleteBoard(@PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        boardService.deleteBoard(id, currentUser);
         return ResponseEntity.noContent().build();
     }
 }

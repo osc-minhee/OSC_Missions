@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import com.boardapp.api.board.dto.BoardListResponse;
 import com.boardapp.api.board.dto.BoardRequest;
 import com.boardapp.api.board.dto.BoardResponse;
+import com.boardapp.api.global.security.CustomUserDetails;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -24,17 +25,20 @@ public interface BoardControllerDocs {
     @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
     ResponseEntity<BoardResponse> getBoard(Long id);
 
-    @Operation(summary = "게시글 생성")
+    @Operation(summary = "게시글 생성", description = "로그인한 사용자만 작성할 수 있습니다.")
     @ApiResponse(responseCode = "201", description = "생성 성공")
-    ResponseEntity<BoardResponse> createBoard(BoardRequest request);
+    @ApiResponse(responseCode = "401", description = "인증 필요")
+    ResponseEntity<BoardResponse> createBoard(BoardRequest request, CustomUserDetails currentUser);
 
-    @Operation(summary = "게시글 수정")
+    @Operation(summary = "게시글 수정", description = "작성자 본인 또는 관리자만 수정할 수 있습니다.")
     @ApiResponse(responseCode = "200", description = "수정 성공")
+    @ApiResponse(responseCode = "403", description = "작성자 본인이 아님")
     @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
-    ResponseEntity<BoardResponse> updateBoard(Long id, BoardRequest request);
+    ResponseEntity<BoardResponse> updateBoard(Long id, BoardRequest request, CustomUserDetails currentUser);
 
-    @Operation(summary = "게시글 삭제")
+    @Operation(summary = "게시글 삭제", description = "작성자 본인 또는 관리자만 삭제할 수 있습니다.")
     @ApiResponse(responseCode = "204", description = "삭제 성공")
+    @ApiResponse(responseCode = "403", description = "작성자 본인이 아님")
     @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
-    ResponseEntity<Void> deleteBoard(Long id);
+    ResponseEntity<Void> deleteBoard(Long id, CustomUserDetails currentUser);
 }

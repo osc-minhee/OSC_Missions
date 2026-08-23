@@ -8,6 +8,7 @@ public record BoardListResponse(
         Long id,
         Long rowNumber,
         String title,
+        String authorNickname,
         LocalDateTime createdAt) {
 
     public static BoardListResponse from(Board board, long rowNumber) {
@@ -15,6 +16,7 @@ public record BoardListResponse(
                 board.getId(),
                 rowNumber,
                 board.getTitle(),
+                board.getAuthor().getNickname(),
                 board.getCreatedAt());
     }
 }
