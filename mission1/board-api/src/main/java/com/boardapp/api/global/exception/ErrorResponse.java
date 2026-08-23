@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 
+// 클라이언트에게 내려주는 통일된 에러 응답 형태 
 public record ErrorResponse(
         LocalDateTime timestamp,
         int status,

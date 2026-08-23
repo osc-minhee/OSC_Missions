@@ -7,14 +7,14 @@ import com.boardapp.api.board.domain.Board;
 public record BoardResponse(
         Long id,
         String title,
-        String description,
+        String content,
         LocalDateTime createdAt) {
 
     public static BoardResponse from(Board board) {
         return new BoardResponse(
                 board.getId(),
                 board.getTitle(),
-                board.getDescription(),
+                board.getContent(),
                 board.getCreatedAt());
     }
 }
