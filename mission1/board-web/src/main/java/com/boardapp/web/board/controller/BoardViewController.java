@@ -1,5 +1,6 @@
 package com.boardapp.web.board.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 import org.springframework.stereotype.Controller;
@@ -19,6 +20,8 @@ import com.boardapp.web.board.dto.BoardFormRequest;
 import com.boardapp.web.board.dto.BoardListResponse;
 import com.boardapp.web.board.dto.BoardResponse;
 import com.boardapp.web.board.dto.PageResponse;
+import com.boardapp.web.global.auth.SessionConst;
+import com.boardapp.web.global.auth.SessionUser;
 import com.boardapp.web.global.exception.ApiErrorMessageExtractor;
 
 import lombok.RequiredArgsConstructor;
@@ -45,7 +48,12 @@ public class BoardViewController {
     }
 
     @GetMapping("/new")
-    public String newForm(Model model) {
+    public String newForm(Model model, HttpServletRequest request, RedirectAttributes redirectAttributes) {
+        if (currentUser(request) == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "로그인이 필요합니다.");
+            return "redirect:/login";
+        }
+
         model.addAttribute("form", new BoardFormRequest(null, null));
         model.addAttribute("mode", "create");
         return "board/form";
@@ -53,7 +61,12 @@ public class BoardViewController {
 
     @PostMapping
     public String create(@Valid @ModelAttribute("form") BoardFormRequest form, BindingResult bindingResult,
-            Model model) {
+            Model model, HttpServletRequest request, RedirectAttributes redirectAttributes) {
+        if (currentUser(request) == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "로그인이 필요합니다.");
+            return "redirect:/login";
+        }
+
         if (bindingResult.hasErrors()) {
             model.addAttribute("mode", "create");
             return "board/form";
@@ -70,9 +83,21 @@ public class BoardViewController {
     }
 
     @GetMapping("/{id}/edit")
-    public String editForm(@PathVariable Long id, Model model) {
+    public String editForm(@PathVariable Long id, Model model, HttpServletRequest request,
+            RedirectAttributes redirectAttributes) {
+        SessionUser loginUser = currentUser(request);
+        if (loginUser == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "로그인이 필요합니다.");
+            return "redirect:/login";
+        }
+
         BoardResponse existing = boardApiClient.getBoard(id);
-        model.addAttribute("form", new BoardFormRequest(existing.title(), existing.description()));
+        if (!existing.authorId().equals(loginUser.id())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "작성자만 수정할 수 있습니다.");
+            return "redirect:/boards/" + id;
+        }
+
+        model.addAttribute("form", new BoardFormRequest(existing.title(), existing.content()));
         model.addAttribute("mode", "edit");
         model.addAttribute("boardId", id);
         return "board/form";
@@ -80,7 +105,13 @@ public class BoardViewController {
 
     @PostMapping("/{id}")
     public String update(@PathVariable Long id, @Valid @ModelAttribute("form") BoardFormRequest form,
-            BindingResult bindingResult, Model model) {
+            BindingResult bindingResult, Model model, HttpServletRequest request,
+            RedirectAttributes redirectAttributes) {
+        if (currentUser(request) == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "로그인이 필요합니다.");
+            return "redirect:/login";
+        }
+
         if (bindingResult.hasErrors()) {
             model.addAttribute("mode", "edit");
             model.addAttribute("boardId", id);
@@ -99,7 +130,12 @@ public class BoardViewController {
     }
 
     @PostMapping("/{id}/delete")
-    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String delete(@PathVariable Long id, HttpServletRequest request, RedirectAttributes redirectAttributes) {
+        if (currentUser(request) == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "로그인이 필요합니다.");
+            return "redirect:/login";
+        }
+
         try {
             boardApiClient.deleteBoard(id);
             redirectAttributes.addFlashAttribute("message", "삭제되었습니다.");
@@ -108,5 +144,10 @@ public class BoardViewController {
             redirectAttributes.addFlashAttribute("errorMessage", ApiErrorMessageExtractor.extract(e));
             return "redirect:/boards/" + id;
         }
+    }
+
+    private SessionUser currentUser(HttpServletRequest request) {
+        var session = request.getSession(false);
+        return session == null ? null : (SessionUser) session.getAttribute(SessionConst.LOGIN_USER);
     }
 }

@@ -9,5 +9,6 @@ public record BoardListResponse(
         Long id,
         Long rowNumber,
         String title,
+        String authorNickname,
         LocalDateTime createdAt) {
 }

@@ -8,6 +8,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public record BoardResponse(
         Long id,
         String title,
-        String description,
+        String content,
+        Long authorId,
+        String authorNickname,
         LocalDateTime createdAt) {
 }

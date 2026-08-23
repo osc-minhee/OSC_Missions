@@ -9,6 +9,16 @@
 <div class="container">
     <div class="nav">
         <h1>게시판</h1>
+        <div th:if="${loginUser != null}">
+            <span th:text="${loginUser.nickname} + '님'"></span>
+            <form th:action="@{/logout}" method="post" class="logout-form">
+                <button type="submit">로그아웃</button>
+            </form>
+        </div>
+        <div th:if="${loginUser == null}">
+            <a th:href="@{/login}">로그인</a>
+            <a th:href="@{/signup}">회원가입</a>
+        </div>
     </div>
 
     <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
@@ -19,6 +29,7 @@
         <tr>
             <th>번호</th>
             <th>제목</th>
+            <th>작성자</th>
             <th>작성일</th>
         </tr>
         </thead>
@@ -26,10 +37,11 @@
         <tr th:each="board : ${boards.content}">
             <td th:text="${board.rowNumber}"></td>
             <td><a th:href="@{/boards/{id}(id=${board.id})}" th:text="${board.title}"></a></td>
+            <td th:text="${board.authorNickname}"></td>
             <td th:text="${#temporals.format(board.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
         </tr>
         <tr th:if="${boards.content.isEmpty()}">
-            <td colspan="3">등록된 게시글이 없습니다.</td>
+            <td colspan="4">등록된 게시글이 없습니다.</td>
         </tr>
         </tbody>
     </table>
@@ -40,7 +52,8 @@
         <a th:unless="${boards.last}" th:href="@{/boards(page=${boards.number + 1})}">다음</a>
     </div>
 
-    <a class="button" th:href="@{/boards/new}">새 글쓰기</a>
+    <a th:if="${loginUser != null}" class="button" th:href="@{/boards/new}">새 글쓰기</a>
+    <a th:if="${loginUser == null}" class="button" th:href="@{/login}">로그인하고 글쓰기</a>
 </div>
 </body>
 </html>

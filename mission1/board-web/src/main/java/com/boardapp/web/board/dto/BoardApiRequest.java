@@ -1,4 +1,4 @@
 package com.boardapp.web.board.dto;
 
-public record BoardApiRequest(String title, String description) {
+public record BoardApiRequest(String title, String content) {
 }

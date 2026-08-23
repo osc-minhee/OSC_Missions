@@ -7,6 +7,16 @@
 </head>
 <body>
 <div class="container">
+    <div class="nav">
+        <a th:href="@{/boards}">게시판</a>
+        <div th:if="${loginUser != null}">
+            <span th:text="${loginUser.nickname} + '님'"></span>
+            <form th:action="@{/logout}" method="post" class="logout-form">
+                <button type="submit">로그아웃</button>
+            </form>
+        </div>
+    </div>
+
     <h1 th:text="${mode == 'create'} ? '게시글 작성' : '게시글 수정'"></h1>
 
     <div th:if="${apiError}" class="alert alert-error" th:text="${apiError}"></div>
