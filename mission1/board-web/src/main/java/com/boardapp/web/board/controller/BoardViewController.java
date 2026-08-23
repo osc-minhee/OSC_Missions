@@ -21,15 +21,14 @@ import com.boardapp.web.board.dto.BoardResponse;
 import com.boardapp.web.board.dto.PageResponse;
 import com.boardapp.web.global.exception.ApiErrorMessageExtractor;
 
+import lombok.RequiredArgsConstructor;
+
 @Controller
 @RequestMapping("api/v1/boards")
+@RequiredArgsConstructor
 public class BoardViewController {
 
     private final BoardApiClient boardApiClient;
-
-    public BoardViewController(BoardApiClient boardApiClient) {
-        this.boardApiClient = boardApiClient;
-    }
 
     @GetMapping
     public String list(@RequestParam(defaultValue = "0") int page, Model model) {

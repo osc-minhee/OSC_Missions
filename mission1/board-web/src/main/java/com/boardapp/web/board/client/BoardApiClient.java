@@ -11,14 +11,13 @@ import com.boardapp.web.board.dto.BoardListResponse;
 import com.boardapp.web.board.dto.BoardResponse;
 import com.boardapp.web.board.dto.PageResponse;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class BoardApiClient {
 
     private final RestClient boardApiRestClient;
-
-    public BoardApiClient(RestClient boardApiRestClient) {
-        this.boardApiRestClient = boardApiRestClient;
-    }
 
     public PageResponse<BoardListResponse> getBoards(int page, int size) {
         return boardApiRestClient.get()
