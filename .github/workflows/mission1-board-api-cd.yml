@@ -1,4 +1,4 @@
-name: board-api CD
+name: mission1-board-api CD
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
       - feature/auth
     paths:
       - "mission1/board-api/**"
-      - ".github/workflows/board-api-cd.yml"
+      - ".github/workflows/mission1-board-api-cd.yml"
 
 jobs:
   build-and-push:
@@ -101,16 +101,26 @@ jobs:
             docker pull "${IMAGE}"
             docker stop "${CONTAINER_NAME}" 2>/dev/null || true
             docker rm "${CONTAINER_NAME}" 2>/dev/null || true
+
+            ENV_FILE=$(mktemp)
+            cat > "${ENV_FILE}" <<EOF
+            SPRING_PROFILES_ACTIVE=prod
+            DB_HOST=${DB_HOST}
+            DB_PORT=${DB_PORT}
+            DB_NAME=${DB_NAME}
+            DB_USERNAME=${DB_USERNAME}
+            DB_PASSWORD=${DB_PASSWORD}
+            EOF
+            if [ "${CONTAINER_NAME}" = "board-api-auth" ]; then
+              echo "JWT_SECRET=${JWT_SECRET}" >> "${ENV_FILE}"
+            fi
+
             docker run -d \
               --name "${CONTAINER_NAME}" \
               --restart unless-stopped \
               --network board-net \
               -p "${HOST_PORT}:8080" \
-              -e SPRING_PROFILES_ACTIVE=prod \
-              -e DB_HOST="${DB_HOST}" \
-              -e DB_PORT="${DB_PORT}" \
-              -e DB_NAME="${DB_NAME}" \
-              -e DB_USERNAME="${DB_USERNAME}" \
-              -e DB_PASSWORD="${DB_PASSWORD}" \
-              -e JWT_SECRET="${JWT_SECRET}" \
+              --env-file "${ENV_FILE}" \
               "${IMAGE}"
+
+            rm -f "${ENV_FILE}"
