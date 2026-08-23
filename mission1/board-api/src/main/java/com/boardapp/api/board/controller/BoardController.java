@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.boardapp.api.board.dto.BoardListResponse;
@@ -63,8 +62,8 @@ public class BoardController implements BoardControllerDocs {
 
     @Override
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBoard(@PathVariable Long id, @RequestParam Long memberId) {
-        boardService.deleteBoard(id, memberId);
+    public ResponseEntity<Void> deleteBoard(@PathVariable Long id) {
+        boardService.deleteBoard(id);
         return ResponseEntity.noContent().build();
     }
 }

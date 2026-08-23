@@ -9,7 +9,5 @@ public record BoardResponse(
         Long id,
         String title,
         String description,
-        Long authorId,
-        String authorName,
         LocalDateTime createdAt) {
 }

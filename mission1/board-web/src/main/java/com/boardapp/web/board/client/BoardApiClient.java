@@ -9,8 +9,6 @@ import com.boardapp.web.board.dto.BoardApiRequest;
 import com.boardapp.web.board.dto.BoardFormRequest;
 import com.boardapp.web.board.dto.BoardListResponse;
 import com.boardapp.web.board.dto.BoardResponse;
-import com.boardapp.web.board.dto.MemberLoginRequest;
-import com.boardapp.web.board.dto.MemberResponse;
 import com.boardapp.web.board.dto.PageResponse;
 
 @Component
@@ -37,37 +35,28 @@ public class BoardApiClient {
                 .body(BoardResponse.class);
     }
 
-    public BoardResponse createBoard(BoardFormRequest form, Long memberId) {
+    public BoardResponse createBoard(BoardFormRequest form) {
         return boardApiRestClient.post()
                 .uri("/api/v1/boards")
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new BoardApiRequest(form.title(), form.description(), memberId))
+                .body(new BoardApiRequest(form.title(), form.description()))
                 .retrieve()
                 .body(BoardResponse.class);
     }
 
-    public BoardResponse updateBoard(Long id, BoardFormRequest form, Long memberId) {
+    public BoardResponse updateBoard(Long id, BoardFormRequest form) {
         return boardApiRestClient.put()
                 .uri("/api/v1/boards/{id}", id)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new BoardApiRequest(form.title(), form.description(), memberId))
+                .body(new BoardApiRequest(form.title(), form.description()))
                 .retrieve()
                 .body(BoardResponse.class);
     }
 
-    public void deleteBoard(Long id, Long memberId) {
+    public void deleteBoard(Long id) {
         boardApiRestClient.delete()
-                .uri("/api/v1/boards/{id}?memberId={memberId}", id, memberId)
+                .uri("/api/v1/boards/{id}", id)
                 .retrieve()
                 .toBodilessEntity();
-    }
-
-    public MemberResponse login(String email, String password) {
-        return boardApiRestClient.post()
-                .uri("/api/v1/members/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(new MemberLoginRequest(email, password))
-                .retrieve()
-                .body(MemberResponse.class);
     }
 }

@@ -2,7 +2,6 @@ package com.boardapp.web.board.controller;
 
 import jakarta.validation.Valid;
 
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -21,7 +20,6 @@ import com.boardapp.web.board.dto.BoardListResponse;
 import com.boardapp.web.board.dto.BoardResponse;
 import com.boardapp.web.board.dto.PageResponse;
 import com.boardapp.web.global.exception.ApiErrorMessageExtractor;
-import com.boardapp.web.security.BoardUserPrincipal;
 
 @Controller
 @RequestMapping("api/v1/boards")
@@ -31,11 +29,6 @@ public class BoardViewController {
 
     public BoardViewController(BoardApiClient boardApiClient) {
         this.boardApiClient = boardApiClient;
-    }
-
-    @ModelAttribute("currentUser")
-    public BoardUserPrincipal currentUser(@AuthenticationPrincipal BoardUserPrincipal principal) {
-        return principal;
     }
 
     @GetMapping
@@ -61,14 +54,14 @@ public class BoardViewController {
 
     @PostMapping
     public String create(@Valid @ModelAttribute("form") BoardFormRequest form, BindingResult bindingResult,
-            Model model, @AuthenticationPrincipal BoardUserPrincipal principal) {
+            Model model) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("mode", "create");
             return "board/form";
         }
 
         try {
-            BoardResponse created = boardApiClient.createBoard(form, principal.memberId());
+            BoardResponse created = boardApiClient.createBoard(form);
             return "redirect:/boards/" + created.id();
         } catch (RestClientResponseException e) {
             model.addAttribute("mode", "create");
@@ -88,7 +81,7 @@ public class BoardViewController {
 
     @PostMapping("/{id}")
     public String update(@PathVariable Long id, @Valid @ModelAttribute("form") BoardFormRequest form,
-            BindingResult bindingResult, Model model, @AuthenticationPrincipal BoardUserPrincipal principal) {
+            BindingResult bindingResult, Model model) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("mode", "edit");
             model.addAttribute("boardId", id);
@@ -96,7 +89,7 @@ public class BoardViewController {
         }
 
         try {
-            boardApiClient.updateBoard(id, form, principal.memberId());
+            boardApiClient.updateBoard(id, form);
             return "redirect:/boards/" + id;
         } catch (RestClientResponseException e) {
             model.addAttribute("mode", "edit");
@@ -107,10 +100,9 @@ public class BoardViewController {
     }
 
     @PostMapping("/{id}/delete")
-    public String delete(@PathVariable Long id, @AuthenticationPrincipal BoardUserPrincipal principal,
-            RedirectAttributes redirectAttributes) {
+    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
-            boardApiClient.deleteBoard(id, principal.memberId());
+            boardApiClient.deleteBoard(id);
             redirectAttributes.addFlashAttribute("message", "삭제되었습니다.");
             return "redirect:/boards";
         } catch (RestClientResponseException e) {

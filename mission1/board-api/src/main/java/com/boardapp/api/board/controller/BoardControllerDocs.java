@@ -24,20 +24,17 @@ public interface BoardControllerDocs {
     @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
     ResponseEntity<BoardResponse> getBoard(Long id);
 
-    @Operation(summary = "게시글 생성", description = "요청에 담긴 memberId를 작성자로 지정합니다.")
+    @Operation(summary = "게시글 생성")
     @ApiResponse(responseCode = "201", description = "생성 성공")
-    @ApiResponse(responseCode = "404", description = "회원을 찾을 수 없음")
     ResponseEntity<BoardResponse> createBoard(BoardRequest request);
 
-    @Operation(summary = "게시글 수정", description = "요청의 memberId가 작성자와 일치해야 수정할 수 있습니다.")
+    @Operation(summary = "게시글 수정")
     @ApiResponse(responseCode = "200", description = "수정 성공")
-    @ApiResponse(responseCode = "403", description = "작성자가 아님")
     @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
     ResponseEntity<BoardResponse> updateBoard(Long id, BoardRequest request);
 
-    @Operation(summary = "게시글 삭제", description = "memberId가 작성자와 일치해야 삭제할 수 있습니다.")
+    @Operation(summary = "게시글 삭제")
     @ApiResponse(responseCode = "204", description = "삭제 성공")
-    @ApiResponse(responseCode = "403", description = "작성자가 아님")
     @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
-    ResponseEntity<Void> deleteBoard(Long id, Long memberId);
+    ResponseEntity<Void> deleteBoard(Long id);
 }
