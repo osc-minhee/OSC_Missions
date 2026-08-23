@@ -27,7 +27,7 @@ public class Board {
 
     private String title;
 
-    private String description;
+    private String content;
 
     @CreatedDate
     @Column(updatable = false)
@@ -36,16 +36,16 @@ public class Board {
     protected Board() {
     }
 
-    public Board(String title, String description) {
+    public Board(String title, String content) {
         this.title = title;
-        this.description = description;
+        this.content = content;
     }
 
     public void setTitle(String title) {
         this.title = title;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setContent(String content) {
+        this.content = content;
     }
 }

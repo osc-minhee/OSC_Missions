@@ -26,8 +26,7 @@ public class BoardService {
 
     // 새로운 게시판 항목 생성
     public BoardResponse createBoard(BoardRequest request) {
-        Board board = new Board(request.title(), request.description());
-
+        Board board = new Board(request.title(), request.content());
         return BoardResponse.from(boardRepository.save(board));
     }
 
@@ -36,13 +35,17 @@ public class BoardService {
         return BoardResponse.from(findBoardOrThrow(id));
     }
 
-    // 모든 게시판 항목 조회 (페이지네이션)
+    // 모든 게시판 항목 조회 (최신순 기준 표시 번호 포함)
     public Page<BoardListResponse> getAllBoards(Pageable pageable) {
+        // 1. 모든 게시판 항목 조회 
         Page<Board> boards = boardRepository.findAll(pageable);
+
+        // 2. 게시판 관련 메타데이터 변수로 저장
         long total = boards.getTotalElements();
         long offset = pageable.getOffset();
         List<Board> content = boards.getContent();
 
+        // 3. rowNumber를 위해 등록순 id 대신 최신 글이 가장 큰 번호를 갖도록 표시 번호를 직접 계산
         List<BoardListResponse> responses = IntStream.range(0, content.size())
                 .mapToObj(i -> BoardListResponse.from(content.get(i), total - offset - i))
                 .toList();
@@ -55,7 +58,7 @@ public class BoardService {
         Board existing = findBoardOrThrow(id);
 
         existing.setTitle(request.title());
-        existing.setDescription(request.description());
+        existing.setContent(request.content());
 
         return BoardResponse.from(boardRepository.save(existing));
     }
@@ -63,10 +66,10 @@ public class BoardService {
     // 게시판 항목 삭제
     public void deleteBoard(Long id) {
         findBoardOrThrow(id);
-
         boardRepository.deleteById(id);
     }
 
+    // 특정 ID에 맞는 게시판 항목 직접 조회 메서드 
     private Board findBoardOrThrow(Long id) {
         return boardRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.BOARD_NOT_FOUND));
