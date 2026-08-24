@@ -12,6 +12,8 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.vars.outputs.image }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -61,3 +63,65 @@ jobs:
           context: mission1/board-api
           push: true
           tags: ${{ steps.vars.outputs.image }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: [self-hosted, board-api]
+    environment: mission1
+    steps:
+      - name: Resolve branch-specific settings
+        id: vars
+        run: |
+          case "${GITHUB_REF_NAME}" in
+            main)
+              echo "container_name=board-api-main" >> "$GITHUB_OUTPUT"
+              echo "host_port=8080" >> "$GITHUB_OUTPUT"
+              ;;
+            feature/auth)
+              echo "container_name=board-api-auth" >> "$GITHUB_OUTPUT"
+              echo "host_port=8081" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Unsupported branch: ${GITHUB_REF_NAME}" >&2
+              exit 1
+              ;;
+          esac
+
+      - name: Deploy on server
+        env:
+          IMAGE: ${{ needs.build-and-push.outputs.image }}
+          CONTAINER_NAME: ${{ steps.vars.outputs.container_name }}
+          HOST_PORT: ${{ steps.vars.outputs.host_port }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          echo "${DOCKERHUB_TOKEN}" | docker login -u "${DOCKERHUB_USERNAME}" --password-stdin
+          docker network create board-net 2>/dev/null || true
+          docker pull "${IMAGE}"
+          docker stop "${CONTAINER_NAME}" 2>/dev/null || true
+          docker rm "${CONTAINER_NAME}" 2>/dev/null || true
+
+          ENV_FILE=$(mktemp)
+          cat > "${ENV_FILE}" <<EOF
+          SPRING_PROFILES_ACTIVE=prod
+          DB_HOST=${DB_HOST}
+          DB_PORT=${DB_PORT}
+          DB_NAME=${DB_NAME}
+          DB_USERNAME=${DB_USERNAME}
+          DB_PASSWORD=${DB_PASSWORD}
+          EOF
+
+          docker run -d \
+            --name "${CONTAINER_NAME}" \
+            --restart unless-stopped \
+            --network board-net \
+            -p "${HOST_PORT}:8080" \
+            --env-file "${ENV_FILE}" \
+            "${IMAGE}"
+
+          rm -f "${ENV_FILE}"
