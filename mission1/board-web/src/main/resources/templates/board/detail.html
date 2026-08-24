@@ -13,7 +13,7 @@
     <p class="meta">
         <span th:text="${#temporals.format(board.createdAt, 'yyyy-MM-dd HH:mm')}"></span>
     </p>
-    <p class="description" th:text="${board.description}"></p>
+    <p class="description" th:text="${board.content}"></p>
 
     <div class="actions">
         <a th:href="@{/boards}">목록</a>

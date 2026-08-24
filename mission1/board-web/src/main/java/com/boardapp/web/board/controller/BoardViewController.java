@@ -72,7 +72,7 @@ public class BoardViewController {
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable Long id, Model model) {
         BoardResponse existing = boardApiClient.getBoard(id);
-        model.addAttribute("form", new BoardFormRequest(existing.title(), existing.description()));
+        model.addAttribute("form", new BoardFormRequest(existing.title(), existing.content()));
         model.addAttribute("mode", "edit");
         model.addAttribute("boardId", id);
         return "board/form";
