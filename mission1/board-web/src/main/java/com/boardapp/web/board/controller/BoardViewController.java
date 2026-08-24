@@ -24,7 +24,7 @@ import com.boardapp.web.global.exception.ApiErrorMessageExtractor;
 import lombok.RequiredArgsConstructor;
 
 @Controller
-@RequestMapping("api/v1/boards")
+@RequestMapping("/boards")
 @RequiredArgsConstructor
 public class BoardViewController {
 
