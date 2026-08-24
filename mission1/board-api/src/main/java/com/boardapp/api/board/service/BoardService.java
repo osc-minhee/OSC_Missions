@@ -7,24 +7,27 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.boardapp.api.board.domain.Board;
 import com.boardapp.api.board.dto.BoardListResponse;
 import com.boardapp.api.board.dto.BoardRequest;
 import com.boardapp.api.board.dto.BoardResponse;
 import com.boardapp.api.board.repository.BoardRepository;
-import com.boardapp.api.global.exception.CustomException;
-import com.boardapp.api.global.exception.ErrorCode;
+import com.boardapp.api.board.validator.BoardValidator;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class BoardService {
 
     private final BoardRepository boardRepository;
+    private final BoardValidator boardValidator;
 
     // 새로운 게시판 항목 생성
+    @Transactional
     public BoardResponse createBoard(BoardRequest request) {
         Board board = new Board(request.title(), request.content());
         return BoardResponse.from(boardRepository.save(board));
@@ -32,7 +35,7 @@ public class BoardService {
 
     // 게시판 항목 조회
     public BoardResponse getBoardById(Long id) {
-        return BoardResponse.from(findBoardOrThrow(id));
+        return BoardResponse.from(boardValidator.getBoardOrThrow(id));
     }
 
     // 모든 게시판 항목 조회 (최신순 기준 표시 번호 포함)
@@ -54,8 +57,9 @@ public class BoardService {
     }
 
     // 게시판 항목 수정
+    @Transactional
     public BoardResponse updateBoard(Long id, BoardRequest request) {
-        Board existing = findBoardOrThrow(id);
+        Board existing = boardValidator.getBoardOrThrow(id);
 
         existing.setTitle(request.title());
         existing.setContent(request.content());
@@ -64,14 +68,9 @@ public class BoardService {
     }
 
     // 게시판 항목 삭제
+    @Transactional
     public void deleteBoard(Long id) {
-        findBoardOrThrow(id);
+        boardValidator.getBoardOrThrow(id);
         boardRepository.deleteById(id);
-    }
-
-    // 특정 ID에 맞는 게시판 항목 직접 조회 메서드 
-    private Board findBoardOrThrow(Long id) {
-        return boardRepository.findById(id)
-                .orElseThrow(() -> new CustomException(ErrorCode.BOARD_NOT_FOUND));
     }
 }
