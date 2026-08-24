@@ -48,6 +48,11 @@ jobs:
           IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/missions:api-${TAG}"
           echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
 
+      - name: Debug image output
+        run: |
+          echo "steps.vars.outputs.image = [${{ steps.vars.outputs.image }}]"
+          echo "DOCKERHUB_USERNAME secret present: [${{ secrets.DOCKERHUB_USERNAME != '' }}]"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
