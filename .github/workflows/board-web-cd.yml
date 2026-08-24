@@ -54,7 +54,7 @@ jobs:
               exit 1
               ;;
           esac
-          IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/board-web:${TAG}"
+          IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/missions:web-${TAG}"
           echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
           echo "container_name=${CONTAINER}" >> "$GITHUB_OUTPUT"
           echo "host_port=${PORT}" >> "$GITHUB_OUTPUT"
@@ -79,6 +79,7 @@ jobs:
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
+    environment: mission1
     steps:
       - name: Deploy to dev server
         uses: appleboy/ssh-action@v1.2.0
