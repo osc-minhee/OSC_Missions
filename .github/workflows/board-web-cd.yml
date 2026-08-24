@@ -12,8 +12,6 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    outputs:
-      image: ${{ steps.vars.outputs.image }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -72,13 +70,16 @@ jobs:
       - name: Resolve branch-specific settings
         id: vars
         run: |
+          SHORT_SHA=${GITHUB_SHA:0:7}
           case "${GITHUB_REF_NAME}" in
             main)
+              echo "image=${{ secrets.DOCKERHUB_USERNAME }}/missions:web-main-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
               echo "container_name=board-web-main" >> "$GITHUB_OUTPUT"
               echo "host_port=8090" >> "$GITHUB_OUTPUT"
               echo "api_port=8080" >> "$GITHUB_OUTPUT"
               ;;
             feature/auth)
+              echo "image=${{ secrets.DOCKERHUB_USERNAME }}/missions:web-auth-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
               echo "container_name=board-web-auth" >> "$GITHUB_OUTPUT"
               echo "host_port=8091" >> "$GITHUB_OUTPUT"
               echo "api_port=8081" >> "$GITHUB_OUTPUT"
@@ -91,7 +92,7 @@ jobs:
 
       - name: Deploy on server
         env:
-          IMAGE: ${{ needs.build-and-push.outputs.image }}
+          IMAGE: ${{ steps.vars.outputs.image }}
           CONTAINER_NAME: ${{ steps.vars.outputs.container_name }}
           HOST_PORT: ${{ steps.vars.outputs.host_port }}
           BOARD_API_BASE_URL: http://${{ secrets.DEV_SERVER_HOST }}:${{ steps.vars.outputs.api_port }}
