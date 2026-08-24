@@ -6,3 +6,6 @@ CLAUDE.md
 .env
 
 mission1/db/init/
+
+# VSCode 로컬 설정 (커밋하지 않음)
+.vscode/

@@ -9,21 +9,22 @@
 <div class="container">
     <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
 
-    <h1 th:text="${board.title}"></h1>
+    <div class="nav">
+        <h1 th:text="${board.title}"></h1>
+        <a class="button" th:href="@{/boards}">목록</a>
+    </div>
     <p class="meta">
         <span th:text="${#temporals.format(board.createdAt, 'yyyy-MM-dd HH:mm')}"></span>
     </p>
     <p class="description" th:text="${board.content}"></p>
 
     <div class="actions">
-        <a th:href="@{/boards}">목록</a>
         <a th:href="@{/boards/{id}/edit(id=${board.id})}">수정</a>
+        <form th:action="@{/boards/{id}/delete(id=${board.id})}" method="post" class="delete-form"
+              onsubmit="return confirm('삭제하시겠습니까?');">
+            <button type="submit">삭제</button>
+        </form>
     </div>
-
-    <form th:action="@{/boards/{id}/delete(id=${board.id})}" method="post" class="delete-form"
-          onsubmit="return confirm('삭제하시겠습니까?');">
-        <button type="submit">삭제</button>
-    </form>
 </div>
 </body>
 </html>

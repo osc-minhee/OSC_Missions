@@ -7,8 +7,9 @@
 </head>
 <body>
 <div class="container">
-    <div class="nav">
+    <div class="nav nav-centered">
         <h1>게시판</h1>
+        <a class="button" th:href="@{/boards/new}">새 글쓰기</a>
     </div>
 
     <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
@@ -34,13 +35,27 @@
         </tbody>
     </table>
 
-    <div class="pagination">
-        <a th:unless="${boards.first}" th:href="@{/boards(page=${boards.number - 1})}">이전</a>
-        <span th:text="${(boards.number + 1) + ' / ' + (boards.totalPages == 0 ? 1 : boards.totalPages)}"></span>
-        <a th:unless="${boards.last}" th:href="@{/boards(page=${boards.number + 1})}">다음</a>
-    </div>
+    <div class="pagination" th:if="${boards.totalPages > 0}"
+         th:with="totalPages=${boards.totalPages}, current=${boards.number},
+                  startPage=${T(java.lang.Math).max(0, T(java.lang.Math).min(current - 2, totalPages - 5))},
+                  endPage=${T(java.lang.Math).min(totalPages - 1, startPage + 4)}">
+        <a class="page-nav" th:if="${!boards.first}" th:href="@{/boards(page=${current - 1})}">&lt;</a>
+        <span class="page-nav disabled" th:if="${boards.first}">&lt;</span>
 
-    <a class="button" th:href="@{/boards/new}">새 글쓰기</a>
+        <a th:if="${startPage > 0}" class="page-number" th:href="@{/boards(page=0)}">1</a>
+        <span th:if="${startPage > 1}" class="page-ellipsis">...</span>
+
+        <a th:each="i : ${#numbers.sequence(startPage, endPage)}"
+           class="page-number" th:classappend="${i == current} ? ' active'"
+           th:href="@{/boards(page=${i})}" th:text="${i + 1}"></a>
+
+        <span th:if="${endPage < totalPages - 2}" class="page-ellipsis">...</span>
+        <a th:if="${endPage < totalPages - 1}" class="page-number"
+           th:href="@{/boards(page=${totalPages - 1})}" th:text="${totalPages}"></a>
+
+        <a class="page-nav" th:if="${!boards.last}" th:href="@{/boards(page=${current + 1})}">&gt;</a>
+        <span class="page-nav disabled" th:if="${boards.last}">&gt;</span>
+    </div>
 </div>
 </body>
 </html>
