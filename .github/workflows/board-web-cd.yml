@@ -11,7 +11,7 @@ on:
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, board-api]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,7 +25,7 @@ jobs:
 
       - name: Build jar
         working-directory: mission1/board-web
-        run: mvn -B clean package -DskipTests
+        run: ./mvnw -B clean package -DskipTests
 
       - name: Resolve branch-specific settings
         id: vars
@@ -64,7 +64,7 @@ jobs:
 
   deploy:
     needs: build-and-push
-    runs-on: [self-hosted, board-web]
+    runs-on: [self-hosted, board-api]
     environment: mission1
     steps:
       - name: Resolve branch-specific settings
@@ -75,12 +75,14 @@ jobs:
             main)
               echo "image=${{ secrets.DOCKERHUB_USERNAME }}/missions:web-main-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
               echo "container_name=board-web-main" >> "$GITHUB_OUTPUT"
+              echo "deploy_dir_name=board-fe" >> "$GITHUB_OUTPUT"
               echo "host_port=8090" >> "$GITHUB_OUTPUT"
               echo "api_port=8080" >> "$GITHUB_OUTPUT"
               ;;
             feature/auth)
               echo "image=${{ secrets.DOCKERHUB_USERNAME }}/missions:web-auth-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
               echo "container_name=board-web-auth" >> "$GITHUB_OUTPUT"
+              echo "deploy_dir_name=board-fe-auth" >> "$GITHUB_OUTPUT"
               echo "host_port=8091" >> "$GITHUB_OUTPUT"
               echo "api_port=8081" >> "$GITHUB_OUTPUT"
               ;;
@@ -90,31 +92,54 @@ jobs:
               ;;
           esac
 
-      - name: Deploy on server
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy on FE server via SSH
         env:
           IMAGE: ${{ steps.vars.outputs.image }}
           CONTAINER_NAME: ${{ steps.vars.outputs.container_name }}
+          DEPLOY_DIR_NAME: ${{ steps.vars.outputs.deploy_dir_name }}
           HOST_PORT: ${{ steps.vars.outputs.host_port }}
           BOARD_API_BASE_URL: http://${{ secrets.DEV_SERVER_HOST }}:${{ steps.vars.outputs.api_port }}
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          FE_SERVER_HOST: ${{ secrets.FE_SERVER_HOST }}
+          FE_DEPLOY_USER: ${{ secrets.FE_DEPLOY_USER }}
         run: |
-          echo "${DOCKERHUB_TOKEN}" | docker login -u "${DOCKERHUB_USERNAME}" --password-stdin
-          docker pull "${IMAGE}"
-          docker stop "${CONTAINER_NAME}" 2>/dev/null || true
-          docker rm "${CONTAINER_NAME}" 2>/dev/null || true
+          KEY_FILE=$(mktemp)
+          printf '%s\n' "${{ secrets.FE_DEPLOY_SSH_KEY }}" > "${KEY_FILE}"
+          chmod 600 "${KEY_FILE}"
 
-          ENV_FILE=$(mktemp)
-          cat > "${ENV_FILE}" <<EOF
-          SPRING_PROFILES_ACTIVE=prod
+          ssh -i "${KEY_FILE}" -o StrictHostKeyChecking=accept-new \
+            "${FE_DEPLOY_USER}@${FE_SERVER_HOST}" \
+            "mkdir -p \"\$HOME/${DEPLOY_DIR_NAME}\" && cat > \"\$HOME/${DEPLOY_DIR_NAME}/docker-compose.yml\"" \
+            < mission1/board-web/docker-compose.yml
+
+          ssh -i "${KEY_FILE}" -o StrictHostKeyChecking=accept-new \
+            "${FE_DEPLOY_USER}@${FE_SERVER_HOST}" bash -s <<EOF
+          set -e
+
+          if sudo systemctl enable docker; then
+            echo "docker.service is enabled for boot startup"
+          else
+            echo "Warning: failed to enable docker.service on boot - check passwordless sudo config on the FE server"
+          fi
+
+          echo "${DOCKERHUB_TOKEN}" | docker login -u "${DOCKERHUB_USERNAME}" --password-stdin
+
+          DEPLOY_DIR="\${HOME}/${DEPLOY_DIR_NAME}"
+          cd "\${DEPLOY_DIR}"
+
+          cat > "\${DEPLOY_DIR}/.env" <<ENV
+          IMAGE=${IMAGE}
+          CONTAINER_NAME=${CONTAINER_NAME}
+          HOST_PORT=${HOST_PORT}
           BOARD_API_BASE_URL=${BOARD_API_BASE_URL}
+          ENV
+
+          docker compose pull
+          docker compose up -d
           EOF
 
-          docker run -d \
-            --name "${CONTAINER_NAME}" \
-            --restart unless-stopped \
-            -p "${HOST_PORT}:8081" \
-            --env-file "${ENV_FILE}" \
-            "${IMAGE}"
-
-          rm -f "${ENV_FILE}"
+          rm -f "${KEY_FILE}"

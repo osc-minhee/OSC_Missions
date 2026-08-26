@@ -11,7 +11,7 @@ on:
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, board-api]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,7 +25,7 @@ jobs:
 
       - name: Build jar
         working-directory: mission1/board-api
-        run: mvn -B clean package -DskipTests
+        run: ./mvnw -B clean package -DskipTests
 
       - name: Resolve branch-specific settings
         id: vars
@@ -67,6 +67,9 @@ jobs:
     runs-on: [self-hosted, board-api]
     environment: mission1
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Resolve branch-specific settings
         id: vars
         run: |
@@ -75,11 +78,15 @@ jobs:
             main)
               echo "image=${{ secrets.DOCKERHUB_USERNAME }}/missions:api-main-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
               echo "container_name=board-api-main" >> "$GITHUB_OUTPUT"
+              echo "db_container_name=board-postgres-main" >> "$GITHUB_OUTPUT"
+              echo "deploy_dir_name=board-api" >> "$GITHUB_OUTPUT"
               echo "host_port=8080" >> "$GITHUB_OUTPUT"
               ;;
             feature/auth)
               echo "image=${{ secrets.DOCKERHUB_USERNAME }}/missions:api-auth-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
               echo "container_name=board-api-auth" >> "$GITHUB_OUTPUT"
+              echo "db_container_name=board-postgres-auth" >> "$GITHUB_OUTPUT"
+              echo "deploy_dir_name=board-api-auth" >> "$GITHUB_OUTPUT"
               echo "host_port=8081" >> "$GITHUB_OUTPUT"
               ;;
             *)
@@ -88,41 +95,44 @@ jobs:
               ;;
           esac
 
+      - name: Ensure Docker starts on boot
+        run: |
+          if sudo systemctl enable docker; then
+            echo "docker.service is enabled for boot startup"
+          else
+            echo "::warning::Failed to enable docker.service on boot - check passwordless sudo config on this runner"
+          fi
+
       - name: Deploy on server
         env:
           IMAGE: ${{ steps.vars.outputs.image }}
           CONTAINER_NAME: ${{ steps.vars.outputs.container_name }}
+          DB_CONTAINER_NAME: ${{ steps.vars.outputs.db_container_name }}
+          DEPLOY_DIR_NAME: ${{ steps.vars.outputs.deploy_dir_name }}
           HOST_PORT: ${{ steps.vars.outputs.host_port }}
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
           DB_NAME: ${{ secrets.DB_NAME }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
           echo "${DOCKERHUB_TOKEN}" | docker login -u "${DOCKERHUB_USERNAME}" --password-stdin
           docker network create board-net 2>/dev/null || true
-          docker pull "${IMAGE}"
-          docker stop "${CONTAINER_NAME}" 2>/dev/null || true
-          docker rm "${CONTAINER_NAME}" 2>/dev/null || true
 
-          ENV_FILE=$(mktemp)
-          cat > "${ENV_FILE}" <<EOF
-          SPRING_PROFILES_ACTIVE=prod
-          DB_HOST=${DB_HOST}
-          DB_PORT=${DB_PORT}
+          DEPLOY_DIR="${HOME}/${DEPLOY_DIR_NAME}"
+          mkdir -p "${DEPLOY_DIR}"
+          cp mission1/board-api/docker-compose.yml "${DEPLOY_DIR}/docker-compose.yml"
+
+          cat > "${DEPLOY_DIR}/.env" <<ENV
+          IMAGE=${IMAGE}
+          CONTAINER_NAME=${CONTAINER_NAME}
+          DB_CONTAINER_NAME=${DB_CONTAINER_NAME}
+          HOST_PORT=${HOST_PORT}
           DB_NAME=${DB_NAME}
           DB_USERNAME=${DB_USERNAME}
           DB_PASSWORD=${DB_PASSWORD}
-          EOF
+          ENV
 
-          docker run -d \
-            --name "${CONTAINER_NAME}" \
-            --restart unless-stopped \
-            --network board-net \
-            -p "${HOST_PORT}:8080" \
-            --env-file "${ENV_FILE}" \
-            "${IMAGE}"
-
-          rm -f "${ENV_FILE}"
+          cd "${DEPLOY_DIR}"
+          docker compose pull
+          docker compose up -d
