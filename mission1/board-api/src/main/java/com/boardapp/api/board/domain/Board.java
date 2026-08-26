@@ -1,5 +1,6 @@
 package com.boardapp.api.board.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
@@ -14,6 +15,7 @@ public class Board extends BaseEntity {
 
     private String title;
 
+    @Column(columnDefinition = "TEXT")
     private String content;
 
     protected Board() {
