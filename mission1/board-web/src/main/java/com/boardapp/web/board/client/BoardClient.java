@@ -5,7 +5,8 @@ import com.boardapp.web.board.dto.BoardListResponse;
 import com.boardapp.web.board.dto.BoardResponse;
 import com.boardapp.web.board.dto.PageResponse;
 
-public interface BoardApiClient {
+// 구현체는 board-api 오류 응답을 com.boardapp.web.global.exception.BoardException(unchecked)으로 통일해서 던진다.
+public interface BoardClient {
 
     PageResponse<BoardListResponse> getBoards(int page, int size);
 

@@ -4,9 +4,9 @@ import org.springframework.web.client.RestClientResponseException;
 
 import com.boardapp.web.board.dto.ErrorResponse;
 
-public final class ApiErrorMessageExtractor {
+public final class ErrorMessageExtractor {
 
-    private ApiErrorMessageExtractor() {
+    private ErrorMessageExtractor() {
     }
 
     public static String extract(RestClientResponseException e) {

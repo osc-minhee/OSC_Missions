@@ -11,15 +11,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.boardapp.web.board.client.BoardApiClient;
+import com.boardapp.web.board.client.BoardClient;
 import com.boardapp.web.board.dto.BoardFormRequest;
 import com.boardapp.web.board.dto.BoardListResponse;
 import com.boardapp.web.board.dto.BoardResponse;
 import com.boardapp.web.board.dto.PageResponse;
-import com.boardapp.web.global.exception.ApiErrorMessageExtractor;
+import com.boardapp.web.global.exception.BoardException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,18 +27,18 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class BoardViewController {
 
-    private final BoardApiClient boardApiClient;
+    private final BoardClient boardClient;
 
     @GetMapping
     public String list(@RequestParam(defaultValue = "0") int page, Model model) {
-        PageResponse<BoardListResponse> boards = boardApiClient.getBoards(page, 10);
+        PageResponse<BoardListResponse> boards = boardClient.getBoards(page, 10);
         model.addAttribute("boards", boards);
         return "board/list";
     }
 
     @GetMapping("/{id}")
     public String detail(@PathVariable Long id, Model model) {
-        BoardResponse board = boardApiClient.getBoard(id);
+        BoardResponse board = boardClient.getBoard(id);
         model.addAttribute("board", board);
         return "board/detail";
     }
@@ -60,18 +59,18 @@ public class BoardViewController {
         }
 
         try {
-            BoardResponse created = boardApiClient.createBoard(form);
+            BoardResponse created = boardClient.createBoard(form);
             return "redirect:/boards/" + created.id();
-        } catch (RestClientResponseException e) {
+        } catch (BoardException e) {
             model.addAttribute("mode", "create");
-            model.addAttribute("apiError", ApiErrorMessageExtractor.extract(e));
+            model.addAttribute("errorMessage", e.getMessage());
             return "board/form";
         }
     }
 
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable Long id, Model model) {
-        BoardResponse existing = boardApiClient.getBoard(id);
+        BoardResponse existing = boardClient.getBoard(id);
         model.addAttribute("form", new BoardFormRequest(existing.title(), existing.content()));
         model.addAttribute("mode", "edit");
         model.addAttribute("boardId", id);
@@ -88,12 +87,12 @@ public class BoardViewController {
         }
 
         try {
-            boardApiClient.updateBoard(id, form);
+            boardClient.updateBoard(id, form);
             return "redirect:/boards/" + id;
-        } catch (RestClientResponseException e) {
+        } catch (BoardException e) {
             model.addAttribute("mode", "edit");
             model.addAttribute("boardId", id);
-            model.addAttribute("apiError", ApiErrorMessageExtractor.extract(e));
+            model.addAttribute("errorMessage", e.getMessage());
             return "board/form";
         }
     }
@@ -101,11 +100,11 @@ public class BoardViewController {
     @PostMapping("/{id}/delete")
     public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
-            boardApiClient.deleteBoard(id);
+            boardClient.deleteBoard(id);
             redirectAttributes.addFlashAttribute("message", "삭제되었습니다.");
             return "redirect:/boards";
-        } catch (RestClientResponseException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", ApiErrorMessageExtractor.extract(e));
+        } catch (BoardException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
             return "redirect:/boards/" + id;
         }
     }

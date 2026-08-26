@@ -9,7 +9,7 @@
 <div class="container">
     <h1 th:text="${mode == 'create'} ? '게시글 작성' : '게시글 수정'"></h1>
 
-    <div th:if="${apiError}" class="alert alert-error" th:text="${apiError}"></div>
+    <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
 
     <form th:action="${mode == 'create'} ? @{/boards} : @{/boards/{id}(id=${boardId})}"
           th:object="${form}" method="post">

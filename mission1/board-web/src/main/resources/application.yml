@@ -6,3 +6,6 @@ spring:
 
 server:
   port: ${SERVER_PORT:8081}
+
+board-api:
+  client-type: ${BOARD_API_CLIENT_TYPE:feign} # rest | feign
