@@ -5,7 +5,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
-import com.boardapp.web.board.dto.BoardApiRequest;
+import com.boardapp.web.board.dto.BoardRequest;
 import com.boardapp.web.board.dto.BoardFormRequest;
 import com.boardapp.web.board.dto.BoardListResponse;
 import com.boardapp.web.board.dto.BoardResponse;
@@ -38,7 +38,7 @@ public class BoardApiClient {
         return boardApiRestClient.post()
                 .uri("/api/v1/boards")
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new BoardApiRequest(form.title(), form.description()))
+                .body(new BoardRequest(form.title(), form.description()))
                 .retrieve()
                 .body(BoardResponse.class);
     }
@@ -47,7 +47,7 @@ public class BoardApiClient {
         return boardApiRestClient.put()
                 .uri("/api/v1/boards/{id}", id)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new BoardApiRequest(form.title(), form.description()))
+                .body(new BoardRequest(form.title(), form.description()))
                 .retrieve()
                 .body(BoardResponse.class);
     }
