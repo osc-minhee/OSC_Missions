@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: board-fe
+  namespace: board
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: board-fe
+  template:
+    metadata:
+      labels:
+        app: board-fe
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      containers:
+        - name: board-fe
+          image: minheek/missions:fe-k3s
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8081
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              valueFrom:
+                configMapKeyRef: {name: board-config, key: SPRING_PROFILES_ACTIVE}
+            - name: BOARD_API_BASE_URL
+              valueFrom:
+                configMapKeyRef: {name: board-config, key: BOARD_API_BASE_URL}
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "300m"
+              memory: "384Mi"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8081
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8081
+            initialDelaySeconds: 20
+            periodSeconds: 5
+            failureThreshold: 3

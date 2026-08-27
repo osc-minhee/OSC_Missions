@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: board-postgres-deployment
+  namespace: board
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: board-postgres
+  template:
+    metadata:
+      labels:
+        app: board-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef: {name: board-config, key: DB_NAME}
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef: {name: board-db-secret, key: DB_USERNAME}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: board-db-secret, key: DB_PASSWORD}
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+      volumes:
+        - name: pgdata
+          persistentVolumeClaim:
+            claimName: board-postgres-pvc

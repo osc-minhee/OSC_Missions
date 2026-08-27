@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: board-config
+  namespace: board
+data:
+  DB_NAME: "board"
+  DB_HOST: "postgres-service"
+  DB_PORT: "5432"
+  SPRING_PROFILES_ACTIVE: "dev"
+  BOARD_API_BASE_URL: "http://board-api:8080"
