@@ -3,8 +3,14 @@ kind: Ingress
 metadata:
   name: board-ingress
   namespace: board
+  annotations: 
+    traefik.ingress.kubernetes.io/router.middlewares: board-https-redirect@kubernetescrd
 spec:
   ingressClassName: traefik
+  tls:
+    - hosts:
+        - board.local
+      secretName: board-tls-secret
   rules:
     - http:
         paths:
