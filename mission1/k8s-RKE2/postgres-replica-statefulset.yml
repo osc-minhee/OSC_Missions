@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: board-postgres-replica
+  namespace: board
+spec:
+  serviceName: board-postgres-replica
+  replicas: 1
+  selector:
+    matchLabels:
+      app: board-postgres-replica
+  template:
+    metadata:
+      labels:
+        app: board-postgres-replica
+    spec:
+      nodeSelector:
+        osc-role: worker-2
+      initContainers:
+        - name: pg-basebackup
+          image: postgres:16-alpine
+          command:
+            - sh
+            - -c
+            - |
+              if [ -z "$(ls -A /var/lib/postgresql/data/pgdata 2>/dev/null)" ]; then
+                PGPASSWORD=$REPL_PASSWORD pg_basebackup \
+                  -h board-postgres-primary -U $REPL_USER \
+                  -D /var/lib/postgresql/data/pgdata -Fp -Xs -P -R
+              fi
+          env:
+            - name: REPL_USER
+              valueFrom: { secretKeyRef: { name: board-db-secret, key: REPL_USER } }
+            - name: REPL_PASSWORD
+              valueFrom: { secretKeyRef: { name: board-db-secret, key: REPL_PASSWORD } }
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          args:
+            - postgres
+            - -c
+            - hot_standby=on
+          ports:
+            - containerPort: 5432
+          env:
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests: { cpu: "100m", memory: "256Mi" }
+            limits: { cpu: "500m", memory: "512Mi" }
+  volumeClaimTemplates:
+    - metadata:
+        name: pgdata
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 1Gi

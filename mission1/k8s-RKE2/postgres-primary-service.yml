@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: board-postgres-primary
+  namespace: board
+spec:
+  clusterIP: None
+  selector:
+    app: board-postgres-primary
+  ports:
+    - port: 5432
+      targetPort: 5432

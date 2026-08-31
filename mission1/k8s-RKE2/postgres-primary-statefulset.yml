@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: board-postgres-primary
+  namespace: board
+spec:
+  serviceName: board-postgres-primary
+  replicas: 1
+  selector:
+    matchLabels:
+      app: board-postgres-primary
+  template:
+    metadata:
+      labels:
+        app: board-postgres-primary
+    spec:
+      nodeSelector:
+        osc-role: worker-1
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          args:
+            - postgres
+            - -c
+            - wal_level=replica
+            - -c
+            - max_wal_senders=3
+            - -c
+            - max_replication_slots=3
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              valueFrom: { configMapKeyRef: { name: board-config, key: DB_NAME } }
+            - name: POSTGRES_USER
+              valueFrom: { secretKeyRef: { name: board-db-secret, key: DB_USERNAME } }
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: board-db-secret, key: DB_PASSWORD } }
+            - name: REPL_USER
+              valueFrom: { secretKeyRef: { name: board-db-secret, key: REPL_USER } }
+            - name: REPL_PASSWORD
+              valueFrom: { secretKeyRef: { name: board-db-secret, key: REPL_PASSWORD } }
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+            - name: initscript
+              mountPath: /docker-entrypoint-initdb.d
+          resources:
+            requests: { cpu: "100m", memory: "256Mi" }
+            limits: { cpu: "500m", memory: "512Mi" }
+      volumes:
+        - name: initscript
+          configMap:
+            name: board-postgres-primary-initscript
+            defaultMode: 0755
+  volumeClaimTemplates:
+    - metadata:
+        name: pgdata
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 1Gi

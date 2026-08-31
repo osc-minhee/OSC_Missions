@@ -9,3 +9,4 @@ data:
   DB_PORT: "5432"
   SPRING_PROFILES_ACTIVE: "dev"
   BOARD_API_BASE_URL: "http://board-api:8080"
+  
