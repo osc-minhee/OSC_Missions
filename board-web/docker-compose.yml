@@ -1,0 +1,10 @@
+services:
+  board-web:
+    image: ${IMAGE}
+    container_name: ${CONTAINER_NAME}
+    restart: unless-stopped
+    ports:
+      - "${HOST_PORT}:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      BOARD_API_BASE_URL: ${BOARD_API_BASE_URL}

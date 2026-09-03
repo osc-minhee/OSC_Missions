@@ -1,0 +1,5 @@
+board-api:
+  base-url: "http://board-api:8080" 
+
+server:
+  port: 8080

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>게시판</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="container">
+    <div class="nav nav-centered">
+        <h1>게시판</h1>
+        <a class="button" th:href="@{/boards/new}">새 글쓰기</a>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+
+    <table class="board-table">
+        <thead>
+        <tr>
+            <th>번호</th>
+            <th>제목</th>
+            <th>작성일</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="board : ${boards.content}">
+            <td th:text="${board.rowNumber}"></td>
+            <td><a th:href="@{/boards/{id}(id=${board.id})}" th:text="${board.title}"></a></td>
+            <td th:text="${#temporals.format(board.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+        </tr>
+        <tr th:if="${boards.content.isEmpty()}">
+            <td colspan="3">등록된 게시글이 없습니다.</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="pagination" th:if="${boards.totalPages > 0}"
+         th:with="totalPages=${boards.totalPages}, current=${boards.number},
+                  startPage=${T(java.lang.Math).max(0, T(java.lang.Math).min(current - 2, totalPages - 5))},
+                  endPage=${T(java.lang.Math).min(totalPages - 1, startPage + 4)}">
+        <a class="page-nav" th:if="${!boards.first}" th:href="@{/boards(page=${current - 1})}">&lt;</a>
+        <span class="page-nav disabled" th:if="${boards.first}">&lt;</span>
+
+        <a th:if="${startPage > 0}" class="page-number" th:href="@{/boards(page=0)}">1</a>
+        <span th:if="${startPage > 1}" class="page-ellipsis">...</span>
+
+        <a th:each="i : ${#numbers.sequence(startPage, endPage)}"
+           class="page-number" th:classappend="${i == current} ? ' active'"
+           th:href="@{/boards(page=${i})}" th:text="${i + 1}"></a>
+
+        <span th:if="${endPage < totalPages - 2}" class="page-ellipsis">...</span>
+        <a th:if="${endPage < totalPages - 1}" class="page-number"
+           th:href="@{/boards(page=${totalPages - 1})}" th:text="${totalPages}"></a>
+
+        <a class="page-nav" th:if="${!boards.last}" th:href="@{/boards(page=${current + 1})}">&gt;</a>
+        <span class="page-nav disabled" th:if="${boards.last}">&gt;</span>
+    </div>
+</div>
+</body>
+</html>

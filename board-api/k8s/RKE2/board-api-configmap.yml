@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: board-api-config
+  namespace: board
+data:
+  DB_HOST: "board-postgres-primary"

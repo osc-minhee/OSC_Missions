@@ -1,0 +1,11 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/board
+    username: board_user
+    password: board_pass
+  jpa:
+    hibernate:
+      ddl-auto: update
